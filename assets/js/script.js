@@ -1,6 +1,9 @@
 // Utility function to create elements
 function createElement(elem, attributes = {}, textContent = '') {
     const element = document.createElement(elem);
+    // for loop condition to go thro object and get its key and key value and then apply them correctly as attribute key and value
+    // for every step we take one item from an object, make it into array which has two items key:value and 
+    // then we can assign them seperately in this case to setAttribute function
     for (const [key, value] of Object.entries(attributes)) {
       element.setAttribute(key, value);
     }
@@ -35,6 +38,7 @@ function createElement(elem, attributes = {}, textContent = '') {
   
   // Locations and weather status
   const locations = ["Kaunas", "Vilnius", "Klaipėda", "Šiauliai", "Panevėžys", "Alytus"];
+  // status list from API and images to display on status match 
   const weatherStatus = {
     "clear": "./assets/img/clear.png",
     "partly-cloudy": "./assets/img/partly-cloudy.png",
@@ -62,6 +66,7 @@ function createElement(elem, attributes = {}, textContent = '') {
   const savedCities = JSON.parse(localStorage.getItem("savedCities")) || [];
   
   // Page rendering functions
+  // Render page elements
   function displayPage() {
     selectForm.append(input, primary);
     inputWrapper.append(labelSelect, inputSelect);
@@ -69,6 +74,7 @@ function createElement(elem, attributes = {}, textContent = '') {
     app.append(mainHeader, inputWrapper, container, selectHeader, selectForm, selectWrapper);
   }
   
+  // Create wheatherItem 
   function createWetherItem(id, hidden) {
     const item = createElement("div", { id: `city_${id}`, class: "item" });
     const remove = createElement("button", { id, class: "remove" }, "X");
@@ -86,26 +92,31 @@ function createElement(elem, attributes = {}, textContent = '') {
     return item;
   }
   
+  // Render initial localtions 
   function drawItems() {
     locations.forEach(city => {
-      const card = createWetherItem(`main_${city}`, true);
-      container.appendChild(card);
+      const item = createWetherItem(`main_${city}`, true);
+      container.appendChild(item);
     });
   }
-  
+  // Render items selected by user 
   function drawSavedItems() {
     savedCities.forEach(city => {
       const target = document.getElementById(`city_${city}`);
       if (!target) {
-        const card = createWetherItem(city, false);
-        selectWrapper.append(card);
+        const item = createWetherItem(city, false);
+        selectWrapper.append(item);
       }
     });
   }
   
+  // API request to get Data for the locations
   async function updateWeather(timeRegEx) {
+    // repeat loop for each city in locations 
     for (let city of locations) {
+        // request (res) we call API for data with provided parameters
       const res = await fetch(`https://api.meteo.lt/v1/places/${city}/forecasts/long-term`);
+      // request converted thro json so we could use it as an object
       const data = await res.json();
   
       const parentDiv = document.getElementById(`city_main_${city}`);
@@ -114,11 +125,14 @@ function createElement(elem, attributes = {}, textContent = '') {
       const jutimine = parentDiv.querySelector(".jutimine");
       const conditionImage = parentDiv.querySelector("img");
   
+      // for eac data point in receved timestamp we place data in correct spots
       data.forecastTimestamps.some(timestamp => {
+        // it check if timezone is correct (forecastTimeUtc)
         if (timeRegEx.test(timestamp.forecastTimeUtc)) {
           cityName.textContent = data.place.name;
           temp.innerHTML = `Temperatūra: <span class="tempInfo">${timestamp.airTemperature}</span>`;
           jutimine.innerHTML = `Jutiminė temperatūra: <span class="tempInfo">${timestamp.feelsLikeTemperature}</span>`;
+          // get image url from weatherStatus object
           conditionImage.src = weatherStatus[timestamp.conditionCode];
           return true;
         }
